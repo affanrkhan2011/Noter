@@ -143,6 +143,27 @@ input, button, textarea {
   font-size: 14px;
 }
 
+.auth-mode-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.auth-mode-badge.signin {
+  background: #eaf5ee;
+  color: var(--primary);
+}
+
+.auth-mode-badge.signup {
+  background: #ecfdf5;
+  color: #047857;
+}
+
 .form-group {
   margin-bottom: 20px;
 }
@@ -203,13 +224,21 @@ input, button, textarea {
   margin-top: 24px;
   font-size: 14px;
   color: var(--text-secondary);
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
 }
 
 .auth-link {
+  background: none;
+  border: none;
   color: var(--primary);
   font-weight: 500;
   text-decoration: none;
   cursor: pointer;
+  padding: 0;
+  font-size: inherit;
 }
 
 .auth-link:hover {
@@ -327,6 +356,11 @@ input, button, textarea {
   transition: all var(--transition-fast);
 }
 
+.note-item,
+.notebook-item {
+  width: 100%;
+}
+
 .notebook-item:hover {
   background-color: var(--primary-light);
   color: var(--primary);
@@ -344,33 +378,6 @@ input, button, textarea {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.delete-notebook-btn {
-  background: none;
-  border: none;
-  color: inherit;
-  opacity: 0;
-  cursor: pointer;
-  padding: 2px;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: opacity var(--transition-fast);
-}
-
-.notebook-item:hover .delete-notebook-btn {
-  opacity: 0.6;
-}
-
-.notebook-item:hover .delete-notebook-btn:hover {
-  opacity: 1;
-  background-color: rgba(255, 255, 255, 0.2);
-}
-
-.notebook-item.active:hover .delete-notebook-btn:hover {
-  background-color: rgba(255, 255, 255, 0.2);
 }
 
 .sidebar-footer {
@@ -520,6 +527,7 @@ input, button, textarea {
   justify-content: space-between;
   align-items: flex-start;
   gap: 8px;
+  position: relative;
 }
 
 .note-item-title {
@@ -533,28 +541,63 @@ input, button, textarea {
   -webkit-box-orient: vertical;
 }
 
-.note-item-delete {
+.more-menu-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.more-btn {
   background: none;
   border: none;
   color: var(--text-light);
   cursor: pointer;
-  opacity: 0;
-  padding: 2px;
-  border-radius: 4px;
+  padding: 4px;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all var(--transition-fast);
 }
 
-.note-item:hover .note-item-delete {
-  opacity: 0.6;
+.more-btn:hover {
+  background-color: var(--bg-tertiary);
+  color: var(--primary);
 }
 
-.note-item-delete:hover {
-  opacity: 1 !important;
-  color: #dc2626;
-  background-color: #fee2e2;
+.more-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  min-width: 220px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  padding: 6px;
+  z-index: 20;
+}
+
+.more-menu button {
+  width: 100%;
+  border: none;
+  background: none;
+  color: var(--text-primary);
+  border-radius: 8px;
+  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-align: left;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.more-menu button:hover {
+  background-color: var(--bg-secondary);
+}
+
+.more-menu button:first-child {
+  color: #b91c1c;
 }
 
 .note-item-snippet {
@@ -620,6 +663,14 @@ input, button, textarea {
   gap: 16px;
 }
 
+.editor-title-wrap {
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
 .editor-title-input {
   flex-grow: 1;
   font-size: 24px;
@@ -630,8 +681,38 @@ input, button, textarea {
   color: var(--text-primary);
 }
 
+.editor-title-input.locked {
+  cursor: pointer;
+  opacity: 0.82;
+}
+
+.editor-title-input.editable {
+  cursor: text;
+  opacity: 1;
+}
+
 .editor-title-input::placeholder {
   color: var(--text-light);
+}
+
+.editor-title-edit-btn {
+  background: var(--primary-light);
+  color: var(--primary);
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all var(--transition-fast);
+}
+
+.editor-title-edit-btn:hover {
+  background: var(--primary);
+  color: #fff;
 }
 
 .editor-status {

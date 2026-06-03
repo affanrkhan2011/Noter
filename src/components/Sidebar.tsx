@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { PenLine, Plus, Folder, LogOut, Trash2 } from 'lucide-react';
+import { PenLine, Plus, Folder, LogOut, Trash2, MoreVertical, MoveRight } from 'lucide-react';
 
 interface Notebook {
   id: string;
@@ -12,6 +12,7 @@ interface SidebarProps {
   setActiveNotebookId: (id: string | null) => void;
   onCreateNotebook: (name: string) => Promise<void>;
   onDeleteNotebook: (id: string) => Promise<void>;
+  onMoveAllNotes: (sourceNotebookId: string, targetNotebookId: string) => Promise<void>;
   userEmail: string;
   onLogout: () => void;
 }
@@ -22,11 +23,13 @@ export default function Sidebar({
   setActiveNotebookId,
   onCreateNotebook,
   onDeleteNotebook,
+  onMoveAllNotes,
   userEmail,
   onLogout,
 }: SidebarProps) {
   const [newNotebookName, setNewNotebookName] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
+  const [notebookMenuOpen, setNotebookMenuOpen] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,28 +87,58 @@ export default function Sidebar({
             </div>
           ) : (
             notebooks.map((notebook) => (
-              <button
+              <div
                 key={notebook.id}
                 className={`notebook-item ${activeNotebookId === notebook.id ? 'active' : ''}`}
                 onClick={() => setActiveNotebookId(notebook.id)}
+                role="button"
+                tabIndex={0}
               >
                 <div className="notebook-item-left">
                   <Folder size={18} />
                   <span>{notebook.name}</span>
                 </div>
-                <button
-                  className="delete-notebook-btn"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (confirm('Are you sure you want to delete this notebook and all its notes?')) {
-                      onDeleteNotebook(notebook.id);
-                    }
-                  }}
-                  title="Delete Notebook"
-                >
-                  <Trash2 size={14} />
-                </button>
-              </button>
+                <div className="more-menu-wrap" onClick={(e) => e.stopPropagation()}>
+                  <button
+                    className="more-btn"
+                    onClick={() => setNotebookMenuOpen(notebookMenuOpen === notebook.id ? null : notebook.id)}
+                    title="More"
+                  >
+                    <MoreVertical size={14} />
+                  </button>
+                  {notebookMenuOpen === notebook.id && (
+                    <div className="more-menu">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setNotebookMenuOpen(null);
+                          if (confirm('Are you sure you want to delete this notebook and all its notes?')) {
+                            onDeleteNotebook(notebook.id);
+                          }
+                        }}
+                      >
+                        <Trash2 size={14} />
+                        <span>Delete</span>
+                      </button>
+                      {notebooks
+                        .filter((candidate) => candidate.id !== notebook.id)
+                        .map((targetNotebook) => (
+                          <button
+                            key={targetNotebook.id}
+                            type="button"
+                            onClick={async () => {
+                              setNotebookMenuOpen(null);
+                              await onMoveAllNotes(notebook.id, targetNotebook.id);
+                            }}
+                          >
+                            <MoveRight size={14} />
+                            <span>Move all notes to {targetNotebook.name}</span>
+                          </button>
+                        ))}
+                    </div>
+                  )}
+                </div>
+              </div>
             ))
           )}
         </div>

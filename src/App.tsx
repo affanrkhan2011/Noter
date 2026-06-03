@@ -221,6 +221,47 @@ export default function App() {
     }
   };
 
+  const handleMoveNote = async (noteId: string, notebookId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('notes')
+        .update({ notebook_id: notebookId })
+        .eq('id', noteId)
+        .select();
+
+      if (error) throw error;
+
+      if (data) {
+        setNotes(notes.filter((note) => note.id !== noteId));
+        if (activeNoteId === noteId) {
+          setActiveNoteId(null);
+        }
+      }
+    } catch (err) {
+      console.error('Error moving note:', err);
+      throw err;
+    }
+  };
+
+  const handleMoveAllNotes = async (sourceNotebookId: string, targetNotebookId: string) => {
+    try {
+      const { error } = await supabase
+        .from('notes')
+        .update({ notebook_id: targetNotebookId })
+        .eq('notebook_id', sourceNotebookId);
+
+      if (error) throw error;
+
+      if (activeNotebookId === sourceNotebookId) {
+        setNotes([]);
+        setActiveNoteId(null);
+      }
+    } catch (err) {
+      console.error('Error moving notes:', err);
+      throw err;
+    }
+  };
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
   };
@@ -253,18 +294,21 @@ export default function App() {
         setActiveNotebookId={setActiveNotebookId}
         onCreateNotebook={handleCreateNotebook}
         onDeleteNotebook={handleDeleteNotebook}
+        onMoveAllNotes={handleMoveAllNotes}
         userEmail={session.user.email}
         onLogout={handleLogout}
       />
       <NotesView
         activeNotebookId={activeNotebookId}
         activeNotebookName={activeNotebook?.name || ''}
+        notebooks={notebooks}
         notes={notes}
         activeNoteId={activeNoteId}
         setActiveNoteId={setActiveNoteId}
         onCreateNote={handleCreateNote}
         onUpdateNote={handleUpdateNote}
         onDeleteNote={handleDeleteNote}
+        onMoveNote={handleMoveNote}
       />
     </div>
   );

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Plus, FileText, Trash2, PenLine, Check, RefreshCw } from 'lucide-react';
+import { Plus, FileText, Trash2, PenLine, Check, RefreshCw, MoreVertical, MoveRight, Pencil } from 'lucide-react';
 
 interface Note {
   id: string;
@@ -11,32 +11,39 @@ interface Note {
 interface NotesViewProps {
   activeNotebookId: string | null;
   activeNotebookName: string;
+  notebooks: { id: string; name: string }[];
   notes: Note[];
   activeNoteId: string | null;
   setActiveNoteId: (id: string | null) => void;
   onCreateNote: () => Promise<void>;
   onUpdateNote: (id: string, title: string, content: string) => Promise<void>;
   onDeleteNote: (id: string) => Promise<void>;
+  onMoveNote: (noteId: string, notebookId: string) => Promise<void>;
 }
 
 export default function NotesView({
   activeNotebookId,
   activeNotebookName,
+  notebooks,
   notes,
   activeNoteId,
   setActiveNoteId,
   onCreateNote,
   onUpdateNote,
   onDeleteNote,
+  onMoveNote,
 }: NotesViewProps) {
   const activeNote = notes.find((n) => n.id === activeNoteId);
   const [editorTitle, setEditorTitle] = useState('');
   const [editorContent, setEditorContent] = useState('');
   const [syncStatus, setSyncStatus] = useState<'saved' | 'saving' | 'idle'>('idle');
+  const [titleEditEnabled, setTitleEditEnabled] = useState(false);
+  const [noteMenuOpen, setNoteMenuOpen] = useState<string | null>(null);
   
   // Track last parameters to prevent overwrites
   const lastActiveNoteId = useRef<string | null>(null);
   const debounceTimer = useRef<any>(null);
+  const titleInputRef = useRef<HTMLInputElement | null>(null);
 
   // Load active note values into editor state
   useEffect(() => {
@@ -49,12 +56,16 @@ export default function NotesView({
         setEditorTitle(activeNote.title || '');
         setEditorContent(activeNote.content || '');
         setSyncStatus('idle');
+        setTitleEditEnabled(false);
+        setNoteMenuOpen(null);
         lastActiveNoteId.current = activeNote.id;
       }
     } else {
       setEditorTitle('');
       setEditorContent('');
       setSyncStatus('idle');
+      setTitleEditEnabled(false);
+      setNoteMenuOpen(null);
       lastActiveNoteId.current = null;
     }
   }, [activeNoteId, notes]);
@@ -104,6 +115,13 @@ export default function NotesView({
     }
   };
 
+  const openTitleEdit = () => {
+    setTitleEditEnabled(true);
+    requestAnimationFrame(() => titleInputRef.current?.focus());
+  };
+
+  const availableMoveTargets = notebooks.filter((notebook) => notebook.id !== activeNotebookId);
+
   if (!activeNotebookId) {
     return (
       <div className="notes-container empty-state">
@@ -140,33 +158,61 @@ export default function NotesView({
             </div>
           ) : (
             notes.map((note) => (
-              <button
+              <div
                 key={note.id}
                 className={`note-item ${activeNoteId === note.id ? 'active' : ''}`}
                 onClick={() => setActiveNoteId(note.id)}
+                role="button"
+                tabIndex={0}
               >
                 <div className="note-item-header">
                   <span className="note-item-title">
                     {note.title || 'Untitled Note'}
                   </span>
-                  <button
-                    className="note-item-delete"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (confirm('Delete this note?')) {
-                        onDeleteNote(note.id);
-                      }
-                    }}
-                    title="Delete Note"
-                  >
-                    <Trash2 size={13} />
-                  </button>
+                  <div className="more-menu-wrap" onClick={(e) => e.stopPropagation()}>
+                    <button
+                      className="more-btn"
+                      onClick={() => setNoteMenuOpen(noteMenuOpen === note.id ? null : note.id)}
+                      title="More"
+                    >
+                      <MoreVertical size={14} />
+                    </button>
+                    {noteMenuOpen === note.id && (
+                      <div className="more-menu">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setNoteMenuOpen(null);
+                            if (confirm('Delete this note?')) {
+                              onDeleteNote(note.id);
+                            }
+                          }}
+                        >
+                          <Trash2 size={14} />
+                          <span>Delete</span>
+                        </button>
+                        {availableMoveTargets.map((notebook) => (
+                          <button
+                            key={notebook.id}
+                            type="button"
+                            onClick={async () => {
+                              setNoteMenuOpen(null);
+                              await onMoveNote(note.id, notebook.id);
+                            }}
+                          >
+                            <MoveRight size={14} />
+                            <span>Move to {notebook.name}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <span className="note-item-snippet">
                   {note.content || 'No content yet...'}
                 </span>
                 <span className="note-item-date">{formatDate(note.updated_at)}</span>
-              </button>
+              </div>
             ))
           )}
         </div>
@@ -177,13 +223,25 @@ export default function NotesView({
         {activeNote ? (
           <>
             <div className="editor-header">
-              <input
-                type="text"
-                className="editor-title-input"
-                placeholder="Note Title"
-                value={editorTitle}
-                onChange={handleTitleChange}
-              />
+              <div className="editor-title-wrap">
+                <input
+                  ref={titleInputRef}
+                  type="text"
+                  className={`editor-title-input ${titleEditEnabled ? 'editable' : 'locked'}`}
+                  placeholder="Note Title"
+                  value={editorTitle}
+                  onChange={handleTitleChange}
+                  readOnly={!titleEditEnabled}
+                />
+                <button
+                  type="button"
+                  className="editor-title-edit-btn"
+                  onClick={openTitleEdit}
+                  title="Edit title"
+                >
+                  <Pencil size={14} />
+                </button>
+              </div>
               <div className="editor-status">
                 {syncStatus === 'saving' && (
                   <>

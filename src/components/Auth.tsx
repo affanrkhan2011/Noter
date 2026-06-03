@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
-import { PenLine, Mail, Lock, Loader2, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { PenLine, Mail, Lock, Loader2, AlertCircle, Eye, EyeOff, Sparkles, ArrowRightLeft } from 'lucide-react';
 
 export default function Auth() {
   const [email, setEmail] = useState('');
@@ -47,6 +47,10 @@ export default function Auth() {
             <PenLine size={28} />
           </div>
           <h1>Noter</h1>
+          <div className={`auth-mode-badge ${isSignUp ? 'signup' : 'signin'}`}>
+            {isSignUp ? <Sparkles size={14} /> : <ArrowRightLeft size={14} />}
+            <span>{isSignUp ? 'Create your account' : 'Welcome back'}</span>
+          </div>
           <p>{isSignUp ? 'Create a new account' : 'Sign in to access your notes'}</p>
         </div>
 
@@ -125,11 +129,11 @@ export default function Auth() {
           </button>
         </form>
 
-        <div className="auth-toggle">
+        <div className={`auth-toggle ${isSignUp ? 'signup' : 'signin'}`}>
           {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
-          <span className="auth-link" onClick={() => setIsSignUp(!isSignUp)}>
+          <button type="button" className="auth-link" onClick={() => setIsSignUp(!isSignUp)}>
             {isSignUp ? 'Sign In' : 'Sign Up'}
-          </span>
+          </button>
         </div>
       </div>
       <style>{`
