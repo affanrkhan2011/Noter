@@ -3,8 +3,15 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !supabaseAnonKey || supabaseUrl === 'YOUR_SUPABASE_URL_HERE' || supabaseAnonKey === 'YOUR_SUPABASE_ANON_KEY_HERE') {
-  console.warn('Supabase credentials are missing or placeholder. Please update your .env file with actual keys.');
-}
+export const isSupabaseConfigured = 
+  !!supabaseUrl && 
+  !!supabaseAnonKey && 
+  supabaseUrl !== 'YOUR_SUPABASE_URL_HERE' && 
+  supabaseAnonKey !== 'YOUR_SUPABASE_ANON_KEY_HERE';
 
-export const supabase = createClient(supabaseUrl || '', supabaseAnonKey || '');
+// Use placeholders if not configured to prevent @supabase/supabase-js from throwing an empty URL error on load
+const url = isSupabaseConfigured ? supabaseUrl : 'https://placeholder.supabase.co';
+const key = isSupabaseConfigured ? supabaseAnonKey : 'placeholder-key';
+
+export const supabase = createClient(url, key);
+

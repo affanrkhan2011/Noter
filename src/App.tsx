@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { supabase } from './lib/supabaseClient';
+import { supabase, isSupabaseConfigured } from './lib/supabaseClient';
 import Auth from './components/Auth';
 import Sidebar from './components/Sidebar';
 import NotesView from './components/NotesView';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Leaf } from 'lucide-react';
 
 interface Notebook {
   id: string;
@@ -25,6 +25,39 @@ export default function App() {
   const [activeNotebookId, setActiveNotebookId] = useState<string | null>(null);
   const [notes, setNotes] = useState<Note[]>([]);
   const [activeNoteId, setActiveNoteId] = useState<string | null>(null);
+
+  if (!isSupabaseConfigured) {
+    return (
+      <div className="auth-page">
+        <div className="auth-card" style={{ maxWidth: 500 }}>
+          <div className="auth-header" style={{ marginBottom: 20 }}>
+            <div className="logo-container">
+              <Leaf size={28} />
+            </div>
+            <h1>Configuration Required</h1>
+            <p style={{ marginTop: 12 }}>
+              Please add your Supabase credentials to configure your application correctly.
+            </p>
+          </div>
+          <div style={{ textAlign: 'left', backgroundColor: 'var(--bg-secondary)', padding: 20, borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', fontSize: 14 }}>
+            <p style={{ fontWeight: 600, marginBottom: 8, color: 'var(--text-primary)' }}>Setting up on Vercel:</p>
+            <ol style={{ marginLeft: 20, lineHeight: 1.6, color: 'var(--text-secondary)' }}>
+              <li>Go to your project dashboard on Vercel.</li>
+              <li>Navigate to <strong>Settings</strong> &rarr; <strong>Environment Variables</strong>.</li>
+              <li>Add the following two environment variables:
+                <ul style={{ listStyle: 'disc', marginLeft: 20, marginTop: 4 }}>
+                  <li>Key: <code>VITE_SUPABASE_URL</code></li>
+                  <li>Key: <code>VITE_SUPABASE_ANON_KEY</code></li>
+                </ul>
+              </li>
+              <li>Redeploy your project under the <strong>Deployments</strong> tab for the changes to take effect.</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
 
   // Monitor auth status
   useEffect(() => {
