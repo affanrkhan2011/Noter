@@ -3,7 +3,7 @@ import { supabase, isSupabaseConfigured } from './lib/supabaseClient';
 import Auth from './components/Auth';
 import Sidebar from './components/Sidebar';
 import NotesView from './components/NotesView';
-import { Loader2, Leaf } from 'lucide-react';
+import { Loader2, PenLine } from 'lucide-react';
 
 interface Notebook {
   id: string;
@@ -32,7 +32,7 @@ export default function App() {
         <div className="auth-card" style={{ maxWidth: 500 }}>
           <div className="auth-header" style={{ marginBottom: 20 }}>
             <div className="logo-container">
-              <Leaf size={28} />
+              <PenLine size={28} />
             </div>
             <h1>Configuration Required</h1>
             <p style={{ marginTop: 12 }}>

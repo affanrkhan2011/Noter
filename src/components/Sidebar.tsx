@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Leaf, Plus, Folder, LogOut, Trash2 } from 'lucide-react';
+import { PenLine, Plus, Folder, LogOut, Trash2 } from 'lucide-react';
 
 interface Notebook {
   id: string;
@@ -45,7 +45,7 @@ export default function Sidebar({
     <aside className="sidebar">
       <div className="sidebar-header">
         <div className="logo-container" style={{ width: 36, height: 36, marginBottom: 0 }}>
-          <Leaf size={20} />
+          <PenLine size={20} />
         </div>
         <span className="sidebar-logo-text">Noter</span>
       </div>

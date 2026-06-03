@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
-import { Leaf, Mail, Lock, Loader2, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { PenLine, Mail, Lock, Loader2, AlertCircle, Eye, EyeOff } from 'lucide-react';
 
 export default function Auth() {
   const [email, setEmail] = useState('');
@@ -44,7 +44,7 @@ export default function Auth() {
       <div className="auth-card">
         <div className="auth-header">
           <div className="logo-container">
-            <Leaf size={28} />
+            <PenLine size={28} />
           </div>
           <h1>Noter</h1>
           <p>{isSignUp ? 'Create a new account' : 'Sign in to access your notes'}</p>
