@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Plus, FileText, Trash2, CloudLightning, Check, RefreshCw } from 'lucide-react';
+import { Plus, FileText, Trash2, PenLine, Check, RefreshCw } from 'lucide-react';
 
 interface Note {
   id: string;
@@ -108,7 +108,7 @@ export default function NotesView({
     return (
       <div className="notes-container empty-state">
         <div className="empty-state-icon">
-          <CloudLightning size={48} />
+          <PenLine size={48} style={{ color: 'var(--primary)' }} />
         </div>
         <h3>Select a Notebook</h3>
         <p>Choose or create a notebook from the sidebar to start taking notes.</p>
