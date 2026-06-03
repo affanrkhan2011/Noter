@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://noter-seven.vercel.app/sitemap.xml
