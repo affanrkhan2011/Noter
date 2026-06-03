@@ -38,7 +38,7 @@ export default function Sidebar({
 
   const getInitials = (email: string) => {
     if (!email) return 'U';
-    return email.split('@')[0].substring(0, 2).toUpperCase();
+    return email.split('@')[0].substring(0, 1).toUpperCase();
   };
 
   return (
