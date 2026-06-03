@@ -1,0 +1,238 @@
+import { useState, useEffect } from 'react';
+import { supabase } from './lib/supabaseClient';
+import Auth from './components/Auth';
+import Sidebar from './components/Sidebar';
+import NotesView from './components/NotesView';
+import { Loader2 } from 'lucide-react';
+
+interface Notebook {
+  id: string;
+  name: string;
+}
+
+interface Note {
+  id: string;
+  title: string;
+  content: string;
+  updated_at: string;
+}
+
+export default function App() {
+  const [session, setSession] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  const [notebooks, setNotebooks] = useState<Notebook[]>([]);
+  const [activeNotebookId, setActiveNotebookId] = useState<string | null>(null);
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [activeNoteId, setActiveNoteId] = useState<string | null>(null);
+
+  // Monitor auth status
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setLoading(false);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Fetch notebooks when user session is active
+  useEffect(() => {
+    if (!session?.user) {
+      setNotebooks([]);
+      setActiveNotebookId(null);
+      return;
+    }
+    fetchNotebooks();
+  }, [session]);
+
+  // Fetch notes when active notebook changes
+  useEffect(() => {
+    if (!activeNotebookId) {
+      setNotes([]);
+      setActiveNoteId(null);
+      return;
+    }
+    fetchNotes(activeNotebookId);
+  }, [activeNotebookId]);
+
+  const fetchNotebooks = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('notebooks')
+        .select('*')
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+      setNotebooks(data || []);
+      
+      // Auto-select first notebook if none selected
+      if (data && data.length > 0 && !activeNotebookId) {
+        setActiveNotebookId(data[0].id);
+      }
+    } catch (err) {
+      console.error('Error fetching notebooks:', err);
+    }
+  };
+
+  const fetchNotes = async (notebookId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('notes')
+        .select('*')
+        .eq('notebook_id', notebookId)
+        .order('updated_at', { ascending: false });
+
+      if (error) throw error;
+      setNotes(data || []);
+    } catch (err) {
+      console.error('Error fetching notes:', err);
+    }
+  };
+
+  const handleCreateNotebook = async (name: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('notebooks')
+        .insert([{ name }])
+        .select();
+
+      if (error) throw error;
+      if (data) {
+        setNotebooks([...notebooks, data[0]]);
+        setActiveNotebookId(data[0].id);
+      }
+    } catch (err) {
+      console.error('Error creating notebook:', err);
+    }
+  };
+
+  const handleDeleteNotebook = async (id: string) => {
+    try {
+      const { error } = await supabase.from('notebooks').delete().eq('id', id);
+      if (error) throw error;
+
+      const updated = notebooks.filter((n) => n.id !== id);
+      setNotebooks(updated);
+
+      if (activeNotebookId === id) {
+        setActiveNotebookId(updated.length > 0 ? updated[0].id : null);
+      }
+    } catch (err) {
+      console.error('Error deleting notebook:', err);
+    }
+  };
+
+  const handleCreateNote = async () => {
+    if (!activeNotebookId) return;
+    try {
+      const { data, error } = await supabase
+        .from('notes')
+        .insert([
+          {
+            title: 'Untitled Note',
+            content: '',
+            notebook_id: activeNotebookId,
+          },
+        ])
+        .select();
+
+      if (error) throw error;
+      if (data) {
+        setNotes([data[0], ...notes]);
+        setActiveNoteId(data[0].id);
+      }
+    } catch (err) {
+      console.error('Error creating note:', err);
+    }
+  };
+
+  const handleUpdateNote = async (id: string, title: string, content: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('notes')
+        .update({ title, content })
+        .eq('id', id)
+        .select();
+
+      if (error) throw error;
+
+      if (data) {
+        // Update notes list and put updated note at top
+        const filtered = notes.filter((n) => n.id !== id);
+        setNotes([data[0], ...filtered]);
+      }
+    } catch (err) {
+      console.error('Error updating note:', err);
+      throw err;
+    }
+  };
+
+  const handleDeleteNote = async (id: string) => {
+    try {
+      const { error } = await supabase.from('notes').delete().eq('id', id);
+      if (error) throw error;
+
+      setNotes(notes.filter((n) => n.id !== id));
+      if (activeNoteId === id) {
+        setActiveNoteId(null);
+      }
+    } catch (err) {
+      console.error('Error deleting note:', err);
+    }
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+  };
+
+  if (loading) {
+    return (
+      <div className="auth-page">
+        <Loader2 size={36} className="animate-spin" style={{ color: 'var(--primary)', animation: 'spin 1s linear infinite' }} />
+        <style>{`
+          @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+          }
+        `}</style>
+      </div>
+    );
+  }
+
+  if (!session) {
+    return <Auth />;
+  }
+
+  const activeNotebook = notebooks.find((n) => n.id === activeNotebookId);
+
+  return (
+    <div className="app-container">
+      <Sidebar
+        notebooks={notebooks}
+        activeNotebookId={activeNotebookId}
+        setActiveNotebookId={setActiveNotebookId}
+        onCreateNotebook={handleCreateNotebook}
+        onDeleteNotebook={handleDeleteNotebook}
+        userEmail={session.user.email}
+        onLogout={handleLogout}
+      />
+      <NotesView
+        activeNotebookId={activeNotebookId}
+        activeNotebookName={activeNotebook?.name || ''}
+        notes={notes}
+        activeNoteId={activeNoteId}
+        setActiveNoteId={setActiveNoteId}
+        onCreateNote={handleCreateNote}
+        onUpdateNote={handleUpdateNote}
+        onDeleteNote={handleDeleteNote}
+      />
+    </div>
+  );
+}
